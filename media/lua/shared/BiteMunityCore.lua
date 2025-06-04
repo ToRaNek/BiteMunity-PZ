@@ -140,9 +140,11 @@ end
 function BiteMunityCore.onZombieAttack(zombie, player, bodyPart, weapon)
     if not player or not zombie then return end
     
-    -- Délai pour laisser le temps au système de blessures de s'appliquer
-    local timer = 0.1
+    -- Fonction de vérification avec protection
     local checkFunction = function()
+        -- Vérifier que le joueur est toujours valide
+        if not player then return end
+        
         -- Vérifier les nouvelles blessures infectées
         local bodyDamage = player:getBodyDamage()
         if bodyDamage then
@@ -156,7 +158,7 @@ function BiteMunityCore.onZombieAttack(zombie, player, bodyPart, weapon)
                             
                             -- Tenter de déterminer le type de blessure
                             if wound:getType() then
-                                woundType = wound:getType()
+                                woundType = tostring(wound:getType())
                             end
                             
                             -- Tester l'immunité
@@ -164,7 +166,7 @@ function BiteMunityCore.onZombieAttack(zombie, player, bodyPart, weapon)
                                 wound:setInfected(false)
                                 BiteMunityCore.cleanInfection(player)
                                 BiteMunityCore.showImmunityMessage(player, woundType)
-                                break
+                                return -- Sortir après avoir traité une blessure
                             end
                         end
                     end
@@ -173,16 +175,25 @@ function BiteMunityCore.onZombieAttack(zombie, player, bodyPart, weapon)
         end
     end
     
-    -- Programmer la vérification avec un délai
-    Events.OnTick.Add(function()
-        timer = timer - getGameTime():getMultiplier() / 1000
+    -- Utiliser un délai avec protection contre les erreurs
+    local timer = 0.1
+    local timerFunction
+    timerFunction = function()
+        local gameTime = getGameTime()
+        if not gameTime then 
+            -- Si le temps de jeu n'est pas disponible, essayer à nouveau
+            return
+        end
+        
+        timer = timer - gameTime:getMultiplier() / 1000
         if timer <= 0 then
             checkFunction()
-            Events.OnTick.Remove(checkFunction)
+            Events.OnTick.Remove(timerFunction)
         end
-    end)
+    end
+    
+    Events.OnTick.Add(timerFunction)
 end
-
 function BiteMunityCore.onPlayerCreate(playerIndex, player)
     -- Charger l'immunité permanente du joueur
     BiteMunityCore.loadPlayerImmunity(player)

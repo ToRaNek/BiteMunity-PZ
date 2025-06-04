@@ -15,7 +15,18 @@ function BiteMunityClient.checkForInfections()
     local player = getPlayer()
     if not player then return end
     
-    local currentFrame = getGameTime():getWorldAgeHours() * 3600 + getGameTime():getTimeOfDay()
+    -- Vérification de sécurité pour getGameTime()
+    local gameTime = getGameTime()
+    if not gameTime then return end
+    
+    -- Alternative plus sûre pour calculer le temps
+    local currentFrame = gameTime:getWorldAgeHours()
+    if not currentFrame then
+        -- Fallback vers un compteur simple si getWorldAgeHours() échoue
+        currentFrame = lastInfectionCheck + 1
+    else
+        currentFrame = currentFrame * 3600 + (gameTime:getTimeOfDay() or 0)
+    end
     
     if currentFrame - lastInfectionCheck < CHECK_INTERVAL then
         return
@@ -77,7 +88,14 @@ function BiteMunityClient.onPlayerGetDamage(player, damageType, damage)
 end
 
 function BiteMunityClient.onTick()
-    BiteMunityClient.checkForInfections()
+    -- Vérification de sécurité avant d'appeler checkForInfections
+    local player = getPlayer()
+    local gameTime = getGameTime()
+    
+    -- S'assurer que le jeu est correctement initialisé
+    if player and gameTime then
+        BiteMunityClient.checkForInfections()
+    end
 end
 
 function BiteMunityClient.onCreatePlayer(playerIndex, player)
