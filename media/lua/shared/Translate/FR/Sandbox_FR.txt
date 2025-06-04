@@ -1,0 +1,18 @@
+Sandbox_FR = {
+    Sandbox_BiteMunity = "BiteMunity - Immunité aux Morsures",
+    Sandbox_BiteMunity_ImmunityChance = "Chance d'Immunité (%)",
+    Sandbox_BiteMunity_ImmunityChance_tooltip = "Pourcentage de chance d'être immunisé contre les infections de zombies (0-100%)",
+    
+    Sandbox_BiteMunity_ImmunityAppliesTo = "S'applique à",
+    Sandbox_BiteMunity_ImmunityAppliesTo_tooltip = "Types de blessures concernées par l'immunité",
+    Sandbox_BiteMunity_ImmunityAppliesTo_option1 = "Toutes les blessures",
+    Sandbox_BiteMunity_ImmunityAppliesTo_option2 = "Morsures seulement",
+    Sandbox_BiteMunity_ImmunityAppliesTo_option3 = "Griffures seulement", 
+    Sandbox_BiteMunity_ImmunityAppliesTo_option4 = "Lacérations seulement",
+    
+    Sandbox_BiteMunity_ShowImmunityMessage = "Afficher Messages d'Immunité",
+    Sandbox_BiteMunity_ShowImmunityMessage_tooltip = "Afficher un message quand l'immunité se déclenche",
+    
+    Sandbox_BiteMunity_PermanentImmunity = "Immunité Permanente", 
+    Sandbox_BiteMunity_PermanentImmunity_tooltip = "Une fois immunisé, le joueur l'est définitivement contre toutes les futures attaques",
+}

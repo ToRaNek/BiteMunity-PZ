@@ -1,0 +1,7 @@
+module BiteMunity
+{
+    imports
+    {
+        Base
+    }
+}

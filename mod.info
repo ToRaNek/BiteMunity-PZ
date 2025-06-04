@@ -1,0 +1,7 @@
+name=BiteMunity - Bite Immunity Mod
+id=BiteMunity
+description=Adds configurable bite immunity system to Project Zomboid. Players can have a chance to be immune to zombie bites, scratches, and lacerations based on configurable percentage.
+authors=ModAuthor
+url=
+modversion=1.0.0
+pzversion=41.78.16
