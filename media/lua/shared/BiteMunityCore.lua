@@ -1,5 +1,5 @@
 -- BiteMunityCore.lua
--- Fonctions principales du système d'immunité
+-- Fonctions principales du système d'immunité - Corrigé pour Build 41
 
 BiteMunityCore = BiteMunityCore or {}
 
@@ -64,11 +64,11 @@ function BiteMunityCore.testImmunity(player, woundType)
     return isImmune
 end
 
--- Fonction pour nettoyer une infection existante
+-- Fonction pour nettoyer une infection existante (Build 41)
 function BiteMunityCore.cleanInfection(player)
     if not player then return end
     
-    -- Retirer l'état d'infection
+    -- Retirer l'état d'infection global
     local bodyDamage = player:getBodyDamage()
     if bodyDamage then
         bodyDamage:setInfected(false)
@@ -76,18 +76,31 @@ function BiteMunityCore.cleanInfection(player)
         bodyDamage:setInfectionTime(0)
         bodyDamage:setInfectionGrowthRate(0)
         
-        -- Nettoyer les blessures infectées
-        for i = 0, bodyDamage:getBodyParts():size() - 1 do
-            local bodyPart = bodyDamage:getBodyParts():get(i)
-            if bodyPart then
-                for j = 0, bodyPart:getWounds():size() - 1 do
-                    local wound = bodyPart:getWounds():get(j)
-                    if wound and wound:isInfected() then
-                        wound:setInfected(false)
-                    end
-                end
+        -- Build 41: Nettoyer les infections sur chaque partie du corps
+        local bodyParts = bodyDamage:getBodyParts()
+        for i = 0, bodyParts:size() - 1 do
+            local bodyPart = bodyParts:get(i)
+            if bodyPart and bodyPart:isInfectedWound() then
+                bodyPart:setInfectedWound(false)
             end
         end
+    end
+end
+
+-- Fonction pour nettoyer complètement une blessure (infection + blessure)
+function BiteMunityCore.cleanWoundCompletely(bodyPart, woundType)
+    if not bodyPart then return end
+    
+    -- Nettoyer l'infection
+    bodyPart:setInfectedWound(false)
+    
+    -- Enlever la blessure elle-même selon le type
+    if woundType == "Bite" and bodyPart:bitten() then
+        bodyPart:setBitten(false, false) -- (bitten, bleeding)
+    elseif woundType == "Scratch" and bodyPart:scratched() then
+        bodyPart:setScratched(false, false) -- (scratched, bleeding)
+    elseif woundType == "Laceration" and bodyPart:isCut() then
+        bodyPart:setCut(false, false) -- (cut, bleeding)
     end
 end
 
@@ -127,66 +140,53 @@ function BiteMunityCore.onPlayerGetDamage(player, damageType, damage)
     if woundType then
         -- Tester l'immunité
         if BiteMunityCore.testImmunity(player, woundType) then
-            -- Le joueur est immunisé, nettoyer l'infection
-            BiteMunityCore.cleanInfection(player)
-            
-            -- Afficher le message d'immunité
-            BiteMunityCore.showImmunityMessage(player, woundType)
+            -- Le joueur est immunisé, programme la vérification après un délai
+            BiteMunityCore.scheduleImmunityCheck(player, woundType)
         end
     end
 end
 
--- Event pour quand un joueur prend des dégâts d'un zombie
-function BiteMunityCore.onZombieAttack(zombie, player, bodyPart, weapon)
-    if not player or not zombie then return end
-    
-    -- Fonction de vérification avec protection
+-- Nouvelle fonction pour programmer une vérification d'immunité avec délai
+function BiteMunityCore.scheduleImmunityCheck(player, woundType)
     local checkFunction = function()
-        -- Vérifier que le joueur est toujours valide
         if not player then return end
         
-        -- Vérifier les nouvelles blessures infectées
         local bodyDamage = player:getBodyDamage()
-        if bodyDamage then
-            for i = 0, bodyDamage:getBodyParts():size() - 1 do
-                local bp = bodyDamage:getBodyParts():get(i)
-                if bp then
-                    for j = 0, bp:getWounds():size() - 1 do
-                        local wound = bp:getWounds():get(j)
-                        if wound and wound:isInfected() then
-                            local woundType = "Bite" -- Par défaut, considérer comme morsure
-                            
-                            -- Tenter de déterminer le type de blessure
-                            if wound:getType() then
-                                woundType = tostring(wound:getType())
-                            end
-                            
-                            -- Tester l'immunité
-                            if BiteMunityCore.testImmunity(player, woundType) then
-                                wound:setInfected(false)
-                                BiteMunityCore.cleanInfection(player)
-                                BiteMunityCore.showImmunityMessage(player, woundType)
-                                return -- Sortir après avoir traité une blessure
-                            end
-                        end
-                    end
+        if not bodyDamage then return end
+        
+        local bodyParts = bodyDamage:getBodyParts()
+        for i = 0, bodyParts:size() - 1 do
+            local bodyPart = bodyParts:get(i)
+            if bodyPart then
+                local shouldClean = false
+                
+                -- Vérifier selon le type de blessure
+                if woundType == "Bite" and bodyPart:bitten() then
+                    shouldClean = true
+                elseif woundType == "Scratch" and bodyPart:scratched() then
+                    shouldClean = true
+                elseif woundType == "Laceration" and bodyPart:isCut() then
+                    shouldClean = true
+                end
+                
+                if shouldClean then
+                    -- Nettoyer complètement la blessure
+                    BiteMunityCore.cleanWoundCompletely(bodyPart, woundType)
+                    BiteMunityCore.cleanInfection(player)
+                    BiteMunityCore.showImmunityMessage(player, woundType)
+                    return -- Traiter une blessure à la fois
                 end
             end
         end
     end
     
-    -- Utiliser un délai avec protection contre les erreurs
-    local timer = 0.1
+    -- Programmer l'exécution avec un petit délai
+    local delayFrames = 5
+    local frameCount = 0
     local timerFunction
     timerFunction = function()
-        local gameTime = getGameTime()
-        if not gameTime then 
-            -- Si le temps de jeu n'est pas disponible, essayer à nouveau
-            return
-        end
-        
-        timer = timer - gameTime:getMultiplier() / 1000
-        if timer <= 0 then
+        frameCount = frameCount + 1
+        if frameCount >= delayFrames then
             checkFunction()
             Events.OnTick.Remove(timerFunction)
         end
@@ -194,6 +194,64 @@ function BiteMunityCore.onZombieAttack(zombie, player, bodyPart, weapon)
     
     Events.OnTick.Add(timerFunction)
 end
+
+-- Event pour quand un joueur prend des dégâts d'un zombie (Build 41)
+function BiteMunityCore.onZombieAttack(zombie, player, bodyPart, weapon)
+    if not player or not zombie then return end
+    
+    -- Fonction de vérification avec protection pour Build 41
+    local checkFunction = function()
+        if not player then return end
+        
+        local bodyDamage = player:getBodyDamage()
+        if not bodyDamage then return end
+        
+        local bodyParts = bodyDamage:getBodyParts()
+        for i = 0, bodyParts:size() - 1 do
+            local bp = bodyParts:get(i)
+            if bp then
+                -- Vérifier chaque type de blessure infectée
+                if bp:bitten() and bp:isInfectedWound() then
+                    if BiteMunityCore.testImmunity(player, "Bite") then
+                        BiteMunityCore.cleanWoundCompletely(bp, "Bite")
+                        BiteMunityCore.cleanInfection(player)
+                        BiteMunityCore.showImmunityMessage(player, "Bite")
+                        return
+                    end
+                elseif bp:scratched() and bp:isInfectedWound() then
+                    if BiteMunityCore.testImmunity(player, "Scratch") then
+                        BiteMunityCore.cleanWoundCompletely(bp, "Scratch")
+                        BiteMunityCore.cleanInfection(player)
+                        BiteMunityCore.showImmunityMessage(player, "Scratch")
+                        return
+                    end
+                elseif bp:isCut() and bp:isInfectedWound() then
+                    if BiteMunityCore.testImmunity(player, "Laceration") then
+                        BiteMunityCore.cleanWoundCompletely(bp, "Laceration")
+                        BiteMunityCore.cleanInfection(player)
+                        BiteMunityCore.showImmunityMessage(player, "Laceration")
+                        return
+                    end
+                end
+            end
+        end
+    end
+    
+    -- Programmer avec un délai sécurisé
+    local delayFrames = 10
+    local frameCount = 0
+    local timerFunction
+    timerFunction = function()
+        frameCount = frameCount + 1
+        if frameCount >= delayFrames then
+            checkFunction()
+            Events.OnTick.Remove(timerFunction)
+        end
+    end
+    
+    Events.OnTick.Add(timerFunction)
+end
+
 function BiteMunityCore.onPlayerCreate(playerIndex, player)
     -- Charger l'immunité permanente du joueur
     BiteMunityCore.loadPlayerImmunity(player)

@@ -1,5 +1,5 @@
 -- BiteMunityClient.lua
--- Code côté client pour le mod BiteMunity
+-- Code côté client pour le mod BiteMunity - Corrigé pour Build 41
 
 require "shared/BiteMunityConfig"
 require "shared/BiteMunityCore"
@@ -12,46 +12,30 @@ local CHECK_INTERVAL = 30 -- Vérifier toutes les 30 frames
 
 -- Fonction de vérification périodique des infections
 function BiteMunityClient.checkForInfections()
-    print("[DEBUG] BiteMunityClient.checkForInfections() - Function started")
 
     local player = getPlayer()
     print("[DEBUG] getPlayer() result:", player)
     if not player then
-        print("[DEBUG] No player found, exiting function")
         return
     end
 
     -- Vérification de sécurité pour getGameTime()
-    print("[DEBUG] Attempting to get game time...")
     local gameTime = getGameTime()
-    print("[DEBUG] getGameTime() result:", gameTime)
     if not gameTime then
-        print("[DEBUG] No game time found, exiting function")
         return
     end
 
     -- Alternative plus sûre pour calculer le temps
-    print("[DEBUG] Calculating current frame...")
     local currentFrame = gameTime:getWorldAgeHours()
-    print("[DEBUG] getWorldAgeHours() result:", currentFrame)
     if not currentFrame then
-        print("[DEBUG] getWorldAgeHours() failed, using fallback calculation")
         -- Fallback vers un compteur simple si getWorldAgeHours() échoue
         currentFrame = lastInfectionCheck + 1
-        print("[DEBUG] Fallback currentFrame:", currentFrame)
     else
         local timeOfDay = gameTime:getTimeOfDay() or 0
-        print("[DEBUG] getTimeOfDay() result:", timeOfDay)
         currentFrame = currentFrame * 3600 + timeOfDay
-        print("[DEBUG] Calculated currentFrame:", currentFrame)
     end
 
-    print("[DEBUG] lastInfectionCheck:", lastInfectionCheck)
-    print("[DEBUG] CHECK_INTERVAL:", CHECK_INTERVAL)
-    print("[DEBUG] Time difference:", currentFrame - lastInfectionCheck)
-
     if currentFrame - lastInfectionCheck < CHECK_INTERVAL then
-        print("[DEBUG] Not enough time passed since last check, exiting")
         return
     end
 
@@ -67,7 +51,7 @@ function BiteMunityClient.checkForInfections()
         return
     end
 
-    -- Parcourir toutes les parties du corps
+    -- Parcourir toutes les parties du corps (Build 41 API)
     local bodyParts = bodyDamage:getBodyParts()
     print("[DEBUG] Body parts object:", bodyParts)
     local bodyPartsCount = bodyParts:size()
@@ -79,99 +63,28 @@ function BiteMunityClient.checkForInfections()
         print("[DEBUG] Body part object:", bodyPart)
 
         if bodyPart then
-            local wounds = bodyPart:getWounds()
-            print("[DEBUG] Wounds object for body part", i, ":", wounds)
-            local woundsCount = wounds:size()
-            print("[DEBUG] Wounds count for body part", i, ":", woundsCount)
+            -- Build 41: Vérifier directement les attributs de blessure
+            local hasInfectedBite = bodyPart:bitten() and bodyPart:isInfectedWound()
+            local hasInfectedScratch = bodyPart:scratched() and bodyPart:isInfectedWound()
+            local hasInfectedCut = bodyPart:isCut() and bodyPart:isInfectedWound()
+            
+            print("[DEBUG] Body part", i, "- Bitten:", bodyPart:bitten(), "Scratched:", bodyPart:scratched(), "Cut:", bodyPart:isCut())
+            print("[DEBUG] Body part", i, "- IsInfectedWound:", bodyPart:isInfectedWound())
 
-            -- Parcourir toutes les blessures
-            for j = 0, woundsCount - 1 do
-                print("[DEBUG] Processing wound index:", j, "for body part:", i)
-                local wound = wounds:get(j)
-                print("[DEBUG] Wound object:", wound)
-
-                if wound then
-                    local isInfected = wound:isInfected()
-                    print("[DEBUG] Wound", j, "isInfected():", isInfected)
-
-                    if isInfected then
-                        print("[DEBUG] Found infected wound! Processing immunity check...")
-
-                        -- Déterminer le type de blessure
-                        local woundType = "Bite" -- Par défaut
-                        print("[DEBUG] Default wound type set to:", woundType)
-
-                        local woundTypeObject = wound:getType()
-                        print("[DEBUG] wound:getType() result:", woundTypeObject)
-
-                        if woundTypeObject then
-                            local type = tostring(woundTypeObject)
-                            print("[DEBUG] Wound type string:", type)
-
-                            if type:find("Scratch") then
-                                woundType = "Scratch"
-                                print("[DEBUG] Detected Scratch wound")
-                            elseif type:find("Laceration") then
-                                woundType = "Laceration"
-                                print("[DEBUG] Detected Laceration wound")
-                            elseif type:find("Bite") then
-                                woundType = "Bite"
-                                print("[DEBUG] Detected Bite wound")
-                            end
-                        else
-                            print("[DEBUG] No wound type found, using default:", woundType)
-                        end
-
-                        -- Tester l'immunité
-                        print("[DEBUG] Testing immunity for wound type:", woundType)
-                        local hasImmunity = BiteMunityCore.testImmunity(player, woundType)
-                        print("[DEBUG] BiteMunityCore.testImmunity() result:", hasImmunity)
-
-                        if hasImmunity then
-                            print("[DEBUG] Player has immunity! Cleaning infection...")
-
-                            -- Nettoyer l'infection
-                            print("[DEBUG] Setting wound infection to false...")
-                            wound:setInfected(false)
-                            print("[DEBUG] Wound infection cleared")
-
-                            print("[DEBUG] Calling BiteMunityCore.cleanInfection()...")
-                            BiteMunityCore.cleanInfection(player)
-                            print("[DEBUG] BiteMunityCore.cleanInfection() completed")
-
-                            print("[DEBUG] Calling BiteMunityCore.showImmunityMessage()...")
-                            BiteMunityCore.showImmunityMessage(player, woundType)
-                            print("[DEBUG] BiteMunityCore.showImmunityMessage() completed")
-
-                            -- Envoyer au serveur si en multijoueur
-                            local clientMode = isClient()
-                            print("[DEBUG] isClient() result:", clientMode)
-
-                            if clientMode then
-                                print("[DEBUG] Sending client command to server...")
-                                local playerID = player:getOnlineID()
-                                print("[DEBUG] Player online ID:", playerID)
-
-                                local commandData = {
-                                    woundType = woundType,
-                                    playerID = playerID
-                                }
-                                print("[DEBUG] Command data:", commandData)
-
-                                sendClientCommand(player, "BiteMunity", "ImmunityTriggered", commandData)
-                                print("[DEBUG] Client command sent successfully")
-                            else
-                                print("[DEBUG] Not in client mode, skipping server communication")
-                            end
-                        else
-                            print("[DEBUG] Player does not have immunity for", woundType)
-                        end
-                    else
-                        print("[DEBUG] Wound", j, "is not infected, skipping")
-                    end
-                else
-                    print("[DEBUG] Wound object is nil at index:", j)
-                end
+            -- Traiter chaque type de blessure infectée
+            if hasInfectedBite then
+                print("[DEBUG] Found infected bite! Processing immunity check...")
+                BiteMunityClient.processInfectedWound(player, bodyPart, "Bite")
+            end
+            
+            if hasInfectedScratch then
+                print("[DEBUG] Found infected scratch! Processing immunity check...")
+                BiteMunityClient.processInfectedWound(player, bodyPart, "Scratch")
+            end
+            
+            if hasInfectedCut then
+                print("[DEBUG] Found infected laceration! Processing immunity check...")
+                BiteMunityClient.processInfectedWound(player, bodyPart, "Laceration")
             end
         else
             print("[DEBUG] Body part is nil at index:", i)
@@ -179,6 +92,62 @@ function BiteMunityClient.checkForInfections()
     end
 
     print("[DEBUG] BiteMunityClient.checkForInfections() - Function completed")
+end
+
+-- Nouvelle fonction pour traiter une blessure infectée spécifique
+function BiteMunityClient.processInfectedWound(player, bodyPart, woundType)
+    print("[DEBUG] Processing infected wound type:", woundType)
+    
+    -- Tester l'immunité
+    print("[DEBUG] Testing immunity for wound type:", woundType)
+    local hasImmunity = BiteMunityCore.testImmunity(player, woundType)
+    print("[DEBUG] BiteMunityCore.testImmunity() result:", hasImmunity)
+
+    if hasImmunity then
+        print("[DEBUG] Player has immunity! Cleaning infection...")
+
+        -- Nettoyer l'infection sur cette partie du corps
+        print("[DEBUG] Setting body part infection to false...")
+        bodyPart:setInfectedWound(false)
+        print("[DEBUG] Body part infection cleared")
+
+        -- Si c'est une morsure et qu'on a l'immunité, enlever l'effet "mordu"
+        if woundType == "Bite" and bodyPart:bitten() then
+            print("[DEBUG] Removing bitten status...")
+            bodyPart:setBitten(false, false) -- (bitten, bleeding)
+        elseif woundType == "Scratch" and bodyPart:scratched() then
+            print("[DEBUG] Removing scratched status...")
+            bodyPart:setScratched(false, false)
+        elseif woundType == "Laceration" and bodyPart:isCut() then
+            print("[DEBUG] Removing cut status...")
+            bodyPart:setCut(false, false)
+        end
+
+        print("[DEBUG] Calling BiteMunityCore.cleanInfection()...")
+        BiteMunityCore.cleanInfection(player)
+        print("[DEBUG] BiteMunityCore.cleanInfection() completed")
+
+        print("[DEBUG] Calling BiteMunityCore.showImmunityMessage()...")
+        BiteMunityCore.showImmunityMessage(player, woundType)
+        print("[DEBUG] BiteMunityCore.showImmunityMessage() completed")
+
+        -- Envoyer au serveur si en multijoueur
+        local clientMode = isClient()
+        print("[DEBUG] isClient() result:", clientMode)
+
+        if clientMode then
+            local playerID = player:getOnlineID()
+
+            local commandData = {
+                woundType = woundType,
+                playerID = playerID
+            }
+
+            sendClientCommand(player, "BiteMunity", "ImmunityTriggered", commandData)
+        end
+    else
+        print("[DEBUG] Player does not have immunity for", woundType)
+    end
 end
 
 -- Event handlers côté client

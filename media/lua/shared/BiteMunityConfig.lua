@@ -16,11 +16,11 @@ BiteMunityConfig.INFECTIOUS_WOUNDS = {
     "Laceration"
 }
 
--- Messages d'immunité
+-- Messages d'immunité (sans accents pour éviter les problèmes d'encodage)
 BiteMunityConfig.IMMUNITY_MESSAGES = {
-    ["Bite"] = "Votre système immunitaire a résisté à l'infection de la morsure !",
-    ["Scratch"] = "Votre système immunitaire a résisté à l'infection de la griffure !",
-    ["Laceration"] = "Votre système immunitaire a résisté à l'infection de la lacération !"
+    ["Bite"] = "Votre systeme immunitaire a resiste a l'infection de la morsure !",
+    ["Scratch"] = "Votre systeme immunitaire a resiste a l'infection de la griffure !",
+    ["Laceration"] = "Votre systeme immunitaire a resiste a l'infection de la laceration !"
 }
 
 -- Fonction pour obtenir les paramètres sandbox
