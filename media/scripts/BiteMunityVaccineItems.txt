@@ -1,0 +1,168 @@
+-- media/scripts/BiteMunityVaccineItems.txt
+-- Items pour le système de vaccin
+
+module BiteMunity
+{
+    imports
+    {
+        Base
+    }
+
+    item BloodSyringe
+    {
+        Type = Normal,
+        DisplayName = Seringue Sterilisee,
+        Icon = Syringe,
+        Weight = 0.1,
+        WorldStaticModel = Syringe,
+        Tags = Medical,
+        Medical = TRUE,
+        Bandage = 5,
+        AlcoholedBandage = 10,
+        CanBandage = TRUE,
+        ReduceInfectionPower = 5,
+        BloodType = Normal,
+    }
+
+    item ImmuneBloodSample
+    {
+        Type = Normal,
+        DisplayName = Echantillon Sang Immunise,
+        Icon = BloodBag,
+        Weight = 0.2,
+        WorldStaticModel = BloodBag,
+        Tags = Medical;Vaccine,
+        Medical = TRUE,
+        CustomContextMenu = ExtractAntibodies,
+        Tooltip = Tooltip_BloodSample,
+        DaysFresh = 2,
+        DaysTotallyRotten = 3,
+        ReplaceOnRotten = Base.RottenBlood,
+    }
+
+    item ImmunityVaccine
+    {
+        Type = Normal,
+        DisplayName = Vaccin d'Immunite,
+        Icon = Pills,
+        Weight = 0.1,
+        WorldStaticModel = Pills,
+        Tags = Medical;Vaccine;Rare,
+        Medical = TRUE,
+        CustomContextMenu = AdministerVaccine,
+        Tooltip = Tooltip_ImmunityVaccine,
+        DaysFresh = 7,
+        DaysTotallyRotten = 10,
+        ReplaceOnRotten = Base.CorruptMedicine,
+        UseDelta = 1.0,
+        UseWhileInventory = FALSE,
+        StaticModel = Pills,
+        Packable = FALSE,
+    }
+
+    item MedicalMicroscope
+    {
+        Type = Normal,
+        DisplayName = Microscope Medical,
+        Icon = Microscope,
+        Weight = 8.5,
+        WorldStaticModel = Microscope,
+        Tags = Medical;Laboratory;Rare,
+        Medical = TRUE,
+        Tooltip = Tooltip_Microscope,
+        IsWaterSource = FALSE,
+        canBeEquipped = Twohand,
+        SurvivalGear = TRUE,
+    }
+
+    item MedicalCentrifuge
+    {
+        Type = Normal,
+        DisplayName = Centrifugeuse Medicale,
+        Icon = Generator,
+        Weight = 12.0,
+        WorldStaticModel = Generator,
+        Tags = Medical;Laboratory;Rare;Electronic,
+        Medical = TRUE,
+        Tooltip = Tooltip_Centrifuge,
+        RequireInHandOrInventory = Screwdriver,
+        IsWaterSource = FALSE,
+        canBeEquipped = Twohand,
+        SurvivalGear = TRUE,
+    }
+
+    item ChemicalLaboratory
+    {
+        Type = Normal,
+        DisplayName = Laboratoire Chimique Portable,
+        Icon = ChemistrySet,
+        Weight = 15.0,
+        WorldStaticModel = ChemistrySet,
+        Tags = Medical;Laboratory;Rare;Chemical,
+        Medical = TRUE,
+        Tooltip = Tooltip_Laboratory,
+        RequireInHandOrInventory = Screwdriver,
+        IsWaterSource = FALSE,
+        canBeEquipped = Twohand,
+        SurvivalGear = TRUE,
+    }
+
+    item ChemicalBottle
+    {
+        Type = Normal,
+        DisplayName = Produits Chimiques Medicaux,
+        Icon = Bleach,
+        Weight = 0.8,
+        WorldStaticModel = Bleach,
+        Tags = Medical;Chemical;Poison,
+        Medical = TRUE,
+        Tooltip = Tooltip_Chemicals,
+        UsesLeft = 5,
+        UseWhileInventory = FALSE,
+        CantBeConsolided = TRUE,
+    }
+
+    item ProtectiveGloves
+    {
+        Type = Clothing,
+        DisplayName = Gants de Protection Medicaux,
+        ClothingItem = Gloves_WhiteTINT,
+        BodyLocation = Hands,
+        Icon = Gloves,
+        BloodLocation = Hands,
+        Tags = Medical;Gloves,
+        BiteDefense = 15,
+        ScratchDefense = 30,
+        FabricType = Cotton,
+        CanHaveHoles = FALSE,
+        Medical = TRUE,
+    }
+
+    item SafetyGoggles
+    {
+        Type = Clothing,
+        DisplayName = Lunettes de Securite,
+        ClothingItem = Glasses_SafetyGoggles,
+        BodyLocation = Eyes,
+        Icon = Glasses,
+        BloodLocation = Eyes,
+        Tags = Medical;Glasses,
+        FabricType = Leather,
+        CanHaveHoles = FALSE,
+        Medical = TRUE,
+    }
+
+    item SterilizationKit
+    {
+        Type = Normal,
+        DisplayName = Kit de Sterilisation,
+        Icon = FirstAidKit,
+        Weight = 1.2,
+        WorldStaticModel = FirstAidKit,
+        Tags = Medical;Sterilization,
+        Medical = TRUE,
+        Tooltip = Tooltip_SterilizationKit,
+        UsesLeft = 10,
+        UseWhileInventory = TRUE,
+    }
+}
