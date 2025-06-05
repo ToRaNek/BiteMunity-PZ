@@ -8,7 +8,7 @@ BiteMunityClient = BiteMunityClient or {}
 
 -- Variables locales
 local lastInfectionCheck = 0
-local CHECK_INTERVAL = 600000 -- Vérifier toutes les minutes
+local CHECK_INTERVAL = 1800 -- Vérifier toutes les minutes
 
 -- Fonction de vérification périodique des infections
 function BiteMunityClient.checkForInfections()
@@ -52,24 +52,12 @@ function BiteMunityClient.checkForInfections()
         if bodyPart then
             -- Build 41: Vérifier directement les attributs de blessure
             local isBitten = bodyPart:bitten()
-            local isScratched = bodyPart:scratched()
-            local isCut = bodyPart:isCut()
             local isInfected = bodyPart:isInfectedWound()
 
             -- Traiter chaque type de blessure infectée
             if isBitten and isInfected then
                 print("[BiteMunity] Found infected bite - testing immunity")
                 BiteMunityClient.processInfectedWound(player, bodyPart, "Bite")
-            end
-            
-            if isScratched and isInfected then
-                print("[BiteMunity] Found infected scratch - testing immunity")
-                BiteMunityClient.processInfectedWound(player, bodyPart, "Scratch")
-            end
-            
-            if isCut and isInfected then
-                print("[BiteMunity] Found infected laceration - testing immunity")
-                BiteMunityClient.processInfectedWound(player, bodyPart, "Laceration")
             end
         end
     end
@@ -119,14 +107,6 @@ function BiteMunityClient.processInfectedWoundSafe(player, bodyPart, woundType)
             if woundType == "Bite" then
                 if bodyPart.SetBitten then
                     bodyPart:SetBitten(false)
-                end
-            elseif woundType == "Scratch" then
-                if bodyPart.setScratched then
-                    bodyPart:setScratched(false)
-                end
-            elseif woundType == "Laceration" then
-                if bodyPart.setCut then
-                    bodyPart:setCut(false)
                 end
             end
         end)

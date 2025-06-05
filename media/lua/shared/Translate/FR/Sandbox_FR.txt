@@ -3,13 +3,6 @@ Sandbox_FR = {
     Sandbox_BiteMunity_ImmunityChance = "Chance d'Immunite (%)",
     Sandbox_BiteMunity_ImmunityChance_tooltip = "Pourcentage de chance d'etre immunise contre les infections de zombies (0-100%)",
     
-    Sandbox_BiteMunity_ImmunityAppliesTo = "S'applique a",
-    Sandbox_BiteMunity_ImmunityAppliesTo_tooltip = "Types de blessures concernees par l'immunite",
-    Sandbox_BiteMunity_ImmunityAppliesTo_option1 = "Toutes les blessures",
-    Sandbox_BiteMunity_ImmunityAppliesTo_option2 = "Morsures seulement",
-    Sandbox_BiteMunity_ImmunityAppliesTo_option3 = "Griffures seulement", 
-    Sandbox_BiteMunity_ImmunityAppliesTo_option4 = "Lacerations seulement",
-    
     Sandbox_BiteMunity_ShowImmunityMessage = "Afficher Messages d'Immunite",
     Sandbox_BiteMunity_ShowImmunityMessage_tooltip = "Afficher un message quand l'immunite se declenche",
     

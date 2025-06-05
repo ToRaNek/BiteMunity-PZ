@@ -42,11 +42,6 @@ function BiteMunityCore.testImmunity(player, woundType)
     
     local settings = BiteMunityConfig.getSandboxSettings()
     
-    -- Vérifier si ce type de blessure est concerné par l'immunité
-    if not BiteMunityConfig.shouldApplyImmunity(woundType, settings.appliesTo) then
-        return false
-    end
-    
     -- Si le joueur est déjà immunisé de façon permanente
     if settings.permanentImmunity and BiteMunityCore.isPlayerPermanentlyImmune(player) then
         return true
@@ -97,10 +92,6 @@ function BiteMunityCore.cleanWoundCompletely(bodyPart, woundType)
     -- Enlever la blessure elle-même selon le type
     if woundType == "Bite" and bodyPart:bitten() then
         bodyPart:setBitten(false, false) -- (bitten, bleeding)
-    elseif woundType == "Scratch" and bodyPart:scratched() then
-        bodyPart:setScratched(false, false) -- (scratched, bleeding)
-    elseif woundType == "Laceration" and bodyPart:isCut() then
-        bodyPart:setCut(false, false) -- (cut, bleeding)
     end
 end
 
@@ -131,10 +122,6 @@ function BiteMunityCore.onPlayerGetDamage(player, damageType, damage)
     
     if damageType == "BITE" or damageType == "Bite" then
         woundType = "Bite"
-    elseif damageType == "SCRATCH" or damageType == "Scratch" then  
-        woundType = "Scratch"
-    elseif damageType == "LACERATION" or damageType == "Laceration" then
-        woundType = "Laceration"
     end
     
     if woundType then
@@ -162,10 +149,6 @@ function BiteMunityCore.scheduleImmunityCheck(player, woundType)
                 
                 -- Vérifier selon le type de blessure
                 if woundType == "Bite" and bodyPart:bitten() then
-                    shouldClean = true
-                elseif woundType == "Scratch" and bodyPart:scratched() then
-                    shouldClean = true
-                elseif woundType == "Laceration" and bodyPart:isCut() then
                     shouldClean = true
                 end
                 
@@ -216,20 +199,6 @@ function BiteMunityCore.onZombieAttack(zombie, player, bodyPart, weapon)
                         BiteMunityCore.cleanWoundCompletely(bp, "Bite")
                         BiteMunityCore.cleanInfection(player)
                         BiteMunityCore.showImmunityMessage(player, "Bite")
-                        return
-                    end
-                elseif bp:scratched() and bp:isInfectedWound() then
-                    if BiteMunityCore.testImmunity(player, "Scratch") then
-                        BiteMunityCore.cleanWoundCompletely(bp, "Scratch")
-                        BiteMunityCore.cleanInfection(player)
-                        BiteMunityCore.showImmunityMessage(player, "Scratch")
-                        return
-                    end
-                elseif bp:isCut() and bp:isInfectedWound() then
-                    if BiteMunityCore.testImmunity(player, "Laceration") then
-                        BiteMunityCore.cleanWoundCompletely(bp, "Laceration")
-                        BiteMunityCore.cleanInfection(player)
-                        BiteMunityCore.showImmunityMessage(player, "Laceration")
                         return
                     end
                 end

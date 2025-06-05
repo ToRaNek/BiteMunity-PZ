@@ -10,16 +10,6 @@ option BiteMunity.ImmunityChance
     translation = BiteMunity_ImmunityChance,
 }
 
-option BiteMunity.ImmunityAppliesTo
-{
-    type = enum,
-    numValues = 4,
-    valueTranslation = BiteMunity_ImmunityAppliesTo,
-    default = 1,
-    page = BiteMunity,
-    translation = BiteMunity_ImmunityAppliesTo,
-}
-
 option BiteMunity.ShowImmunityMessage
 {
     type = boolean,
