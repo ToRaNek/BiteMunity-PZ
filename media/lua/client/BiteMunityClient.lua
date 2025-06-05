@@ -8,7 +8,7 @@ BiteMunityClient = BiteMunityClient or {}
 
 -- Variables locales
 local lastInfectionCheck = 0
-local CHECK_INTERVAL = 30 -- Vérifier toutes les 30 frames
+local CHECK_INTERVAL = 600000 -- Vérifier toutes les minutes
 
 -- Fonction de vérification périodique des infections
 function BiteMunityClient.checkForInfections()
@@ -89,10 +89,6 @@ function BiteMunityClient.processInfectedWound(player, bodyPart, woundType)
         -- Correction: Utiliser les bonnes méthodes pour enlever les blessures
         if woundType == "Bite" and bodyPart:bitten() then
 	        bodyPart:SetInfected(false)
-        elseif woundType == "Scratch" and bodyPart:scratched() then
-            bodyPart:SetInfected(false)
-        elseif woundType == "Laceration" and bodyPart:isCut() then
-            bodyPart:SetInfected(false)
         end
 
         BiteMunityCore.cleanInfection(player)
