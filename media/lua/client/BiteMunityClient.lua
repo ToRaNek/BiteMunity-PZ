@@ -1,8 +1,8 @@
 -- BiteMunityClient.lua
 -- Code côté client pour le mod BiteMunity - Corrigé pour Build 41
 
-require "shared/BiteMunityConfig"
-require "shared/BiteMunityCore"
+-- Import des modules partagés (sans require car ils sont chargés directement)
+-- BiteMunityConfig et BiteMunityCore sont chargés automatiquement
 
 BiteMunityClient = BiteMunityClient or {}
 
@@ -76,7 +76,14 @@ function BiteMunityClient.processInfectedWound(player, bodyPart, woundType)
 
         -- Correction: Utiliser les bonnes méthodes pour enlever les blessures
         if woundType == "Bite" and bodyPart:bitten() then
-	        bodyPart:SetInfected(false)
+            -- Utiliser la fonction sécurisée
+            local success, error = pcall(function()
+                bodyPart:setBitten(false, false)
+            end)
+            
+            if not success then
+                print("[BiteMunity] Error cleaning bite wound:", error)
+            end
         end
 
         BiteMunityCore.cleanInfection(player)
@@ -105,8 +112,8 @@ function BiteMunityClient.processInfectedWoundSafe(player, bodyPart, woundType)
             
             -- Nettoyer les blessures en fonction du type
             if woundType == "Bite" then
-                if bodyPart.SetBitten then
-                    bodyPart:SetBitten(false)
+                if bodyPart.setBitten then
+                    bodyPart:setBitten(false, false)
                 end
             end
         end)
@@ -168,12 +175,12 @@ function BiteMunityClient.onServerCommand(module, command, args)
     
     if command == "SyncImmunity" then
         -- Synchroniser l'état d'immunité permanente
-        if args.playerID == player:getOnlineID() then
+        if args and args.playerID == player:getOnlineID() then
             BiteMunityCore.setPlayerPermanentImmunity(player, args.immune)
         end
     elseif command == "ShowImmunityMessage" then
         -- Afficher le message d'immunité
-        if args.playerID == player:getOnlineID() then
+        if args and args.playerID == player:getOnlineID() then
             BiteMunityCore.showImmunityMessage(player, args.woundType)
         end
     end
