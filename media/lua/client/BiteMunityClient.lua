@@ -1,8 +1,5 @@
--- BiteMunityClient.lua
--- Code côté client pour le mod BiteMunity - Corrigé pour Build 41
-
--- Import des modules partagés (sans require car ils sont chargés directement)
--- BiteMunityConfig et BiteMunityCore sont chargés automatiquement
+-- media/lua/client/BiteMunityClient.lua
+-- Code côté client pour le mod BiteMunity - MORSURES UNIQUEMENT - VERSION CORRIGÉE
 
 BiteMunityClient = BiteMunityClient or {}
 
@@ -10,8 +7,8 @@ BiteMunityClient = BiteMunityClient or {}
 local lastInfectionCheck = 0
 local CHECK_INTERVAL = 1800 -- Vérifier toutes les minutes
 
--- Fonction de vérification périodique des infections
-function BiteMunityClient.checkForInfections()
+-- Fonction de vérification périodique des infections de morsure
+function BiteMunityClient.checkForBiteInfections()
     local player = getPlayer()
     if not player then
         return
@@ -22,7 +19,6 @@ function BiteMunityClient.checkForInfections()
         return
     end
 
-    -- Alternative plus sûre pour calculer le temps
     local currentFrame = gameTime:getWorldAgeHours()
     if not currentFrame then
         currentFrame = lastInfectionCheck + 1
@@ -42,7 +38,7 @@ function BiteMunityClient.checkForInfections()
         return
     end
 
-    -- Parcourir toutes les parties du corps (Build 41 API)
+    -- Vérifier SEULEMENT les morsures infectées
     local bodyParts = bodyDamage:getBodyParts()
     local bodyPartsCount = bodyParts:size()
 
@@ -50,92 +46,49 @@ function BiteMunityClient.checkForInfections()
         local bodyPart = bodyParts:get(i)
 
         if bodyPart then
-            -- Build 41: Vérifier directement les attributs de blessure
+            -- Vérifier uniquement les morsures infectées
             local isBitten = bodyPart:bitten()
             local isInfected = bodyPart:isInfectedWound()
 
-            -- Traiter chaque type de blessure infectée
             if isBitten and isInfected then
-                print("[BiteMunity] Found infected bite - testing immunity")
-                BiteMunityClient.processInfectedWound(player, bodyPart, "Bite")
+                print("[BiteMunity] Morsure infectée trouvée - test d'immunité")
+                BiteMunityClient.processInfectedBite(player, bodyPart)
+                return -- Traiter une seule morsure à la fois
             end
         end
     end
 end
 
--- Nouvelle fonction pour traiter une blessure infectée spécifique - CORRIGÉE
-function BiteMunityClient.processInfectedWound(player, bodyPart, woundType)
-    -- Tester l'immunité
-    local hasImmunity = BiteMunityCore.testImmunity(player, woundType)
+-- Traiter une morsure infectée spécifique
+function BiteMunityClient.processInfectedBite(player, bodyPart)
+    -- Tester l'immunité aux morsures
+    local hasImmunity = BiteMunityCore.testImmunity(player, "Bite")
 
     if hasImmunity then
-        print("[BiteMunity] Player has immunity for " .. woundType .. " - cleaning infection")
+        print("[BiteMunity] Joueur immunisé aux morsures - nettoyage de l'infection")
 
         -- Nettoyer l'infection sur cette partie du corps
         bodyPart:setInfectedWound(false)
 
-        -- Correction: Utiliser les bonnes méthodes pour enlever les blessures
-        if woundType == "Bite" and bodyPart:bitten() then
-            -- Utiliser la fonction sécurisée
-            local success, error = pcall(function()
-                bodyPart:setBitten(false, false)
-            end)
-            
-            if not success then
-                print("[BiteMunity] Error cleaning bite wound:", error)
-            end
-        end
-
-        BiteMunityCore.cleanInfection(player)
-        BiteMunityCore.showImmunityMessage(player, woundType)
-
-        -- Envoyer au serveur si en multijoueur
-        if isClient() then
-            local playerID = player:getOnlineID()
-            local commandData = {
-                woundType = woundType,
-                playerID = playerID
-            }
-            sendClientCommand(player, "BiteMunity", "ImmunityTriggered", commandData)
-        end
-    end
-end
-
--- Version alternative avec une approche plus sûre pour Build 41
-function BiteMunityClient.processInfectedWoundSafe(player, bodyPart, woundType)
-    local hasImmunity = BiteMunityCore.testImmunity(player, woundType)
-
-    if hasImmunity then
-        -- Approche plus sûre: utiliser pcall pour éviter les crashs
+        -- Enlever la morsure si possible
         local success, error = pcall(function()
-            bodyPart:setInfectedWound(false)
-            
-            -- Nettoyer les blessures en fonction du type
-            if woundType == "Bite" then
-                if bodyPart.setBitten then
-                    bodyPart:setBitten(false, false)
-                end
-            end
+            bodyPart:SetBitten(false)
         end)
         
         if not success then
-            print("[BiteMunity] Error cleaning wound:", error)
-            -- Fallback: au moins nettoyer l'infection
-            if bodyPart.setInfectedWound then
-                bodyPart:setInfectedWound(false)
-            end
-        else
-            print("[BiteMunity] Successfully cleaned " .. woundType .. " infection")
+            print("[BiteMunity] Erreur lors du nettoyage de la morsure:", error)
+            -- Au moins nettoyer l'infection
+            bodyPart:setInfectedWound(false)
         end
 
         BiteMunityCore.cleanInfection(player)
-        BiteMunityCore.showImmunityMessage(player, woundType)
+        BiteMunityCore.showImmunityMessage(player, "Bite")
 
         -- Envoyer au serveur si en multijoueur
         if isClient() then
             local playerID = player:getOnlineID()
             local commandData = {
-                woundType = woundType,
+                woundType = "Bite",
                 playerID = playerID
             }
             sendClientCommand(player, "BiteMunity", "ImmunityTriggered", commandData)
@@ -145,18 +98,25 @@ end
 
 -- Event handlers côté client
 function BiteMunityClient.onPlayerGetDamage(player, damageType, damage)
-    if player ~= getPlayer() then return end
+    if player ~= getPlayer() then 
+        return 
+    end
+    
+    -- Ne traiter QUE les morsures
+    if damageType ~= "BITE" and damageType ~= "Bite" then
+        return
+    end
+    
     BiteMunityCore.onPlayerGetDamage(player, damageType, damage)
 end
 
 function BiteMunityClient.onTick()
-    -- Vérification de sécurité avant d'appeler checkForInfections
     local player = getPlayer()
     local gameTime = getGameTime()
     
     -- S'assurer que le jeu est correctement initialisé
     if player and gameTime then
-        BiteMunityClient.checkForInfections()
+        BiteMunityClient.checkForBiteInfections()
     end
 end
 
@@ -168,10 +128,14 @@ end
 
 -- Fonction pour gérer les commandes du serveur
 function BiteMunityClient.onServerCommand(module, command, args)
-    if module ~= "BiteMunity" then return end
+    if module ~= "BiteMunity" then 
+        return 
+    end
     
     local player = getPlayer()
-    if not player then return end
+    if not player then 
+        return 
+    end
     
     if command == "SyncImmunity" then
         -- Synchroniser l'état d'immunité permanente
@@ -181,7 +145,7 @@ function BiteMunityClient.onServerCommand(module, command, args)
     elseif command == "ShowImmunityMessage" then
         -- Afficher le message d'immunité
         if args and args.playerID == player:getOnlineID() then
-            BiteMunityCore.showImmunityMessage(player, args.woundType)
+            BiteMunityCore.showImmunityMessage(player, "Bite")
         end
     end
 end
@@ -194,7 +158,7 @@ function BiteMunityClient.init()
     Events.OnCreatePlayer.Add(BiteMunityClient.onCreatePlayer)
     Events.OnServerCommand.Add(BiteMunityClient.onServerCommand)
     
-    print("[BiteMunity] Client initialized")
+    print("[BiteMunity] Client initialized - Protection contre les morsures de zombies uniquement")
 end
 
 -- Initialiser le client

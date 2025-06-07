@@ -1,11 +1,14 @@
 Sandbox_FR = {
     Sandbox_BiteMunity = "BiteMunity - Immunite aux Morsures",
     Sandbox_BiteMunity_ImmunityChance = "Chance d'Immunite (%)",
-    Sandbox_BiteMunity_ImmunityChance_tooltip = "Pourcentage de chance d'etre immunise contre les infections de zombies (0-100%)",
+    Sandbox_BiteMunity_ImmunityChance_tooltip = "Pourcentage de chance d'etre immunise contre les morsures de zombies (0-100%)",
     
     Sandbox_BiteMunity_ShowImmunityMessage = "Afficher Messages d'Immunite",
-    Sandbox_BiteMunity_ShowImmunityMessage_tooltip = "Afficher un message quand l'immunite se declenche",
+    Sandbox_BiteMunity_ShowImmunityMessage_tooltip = "Afficher un message quand l'immunite aux morsures se declenche",
     
     Sandbox_BiteMunity_PermanentImmunity = "Immunite Permanente", 
-    Sandbox_BiteMunity_PermanentImmunity_tooltip = "Une fois immunise, le joueur l'est definitivement contre toutes les futures attaques",
+    Sandbox_BiteMunity_PermanentImmunity_tooltip = "Une fois immunise, le joueur l'est definitivement contre toutes les futures morsures",
+    
+    Sandbox_BiteMunity_NaturalImmunityChance = "Chance d'Immunite Naturelle (%)",
+    Sandbox_BiteMunity_NaturalImmunityChance_tooltip = "Pourcentage de chance qu'un nouveau personnage soit naturellement immunise aux morsures (0-100%)",
 }

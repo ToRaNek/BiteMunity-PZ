@@ -21,7 +21,17 @@ option BiteMunity.ShowImmunityMessage
 option BiteMunity.PermanentImmunity
 {
     type = boolean,
-    default = false,
+    default = true,
     page = BiteMunity,
     translation = BiteMunity_PermanentImmunity,
+}
+
+option BiteMunity.NaturalImmunityChance
+{
+    type = integer,
+    min = 0,
+    max = 100,
+    default = 5,
+    page = BiteMunity,
+    translation = BiteMunity_NaturalImmunityChance,
 }
